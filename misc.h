@@ -14,6 +14,8 @@
 #define outer(ptr, type, field) \
 	((ptr) != 0 ? container_of(ptr, type, field) : (type *)0)
 
+#define LAMBDA(t, ...) ({ t lambda __VA_ARGS__ ; &lambda; })
+
 /* __R_MISC_H__ */
 #endif
 

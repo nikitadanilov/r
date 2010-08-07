@@ -111,7 +111,7 @@ bool r_list_is_empty(const struct r_list *list)
 
 bool r_link_is_linked(const struct r_link *link)
 {
-	return link->ln_next != link;
+	return link->ln_next != link && link->ln_next != NULL;
 }
 
 bool r_link_invariant(const struct r_link *link)

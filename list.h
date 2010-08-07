@@ -46,6 +46,11 @@ void r_list_iterate(struct r_list *list, bool (*f)(struct r_link *link));
 void r_list_iterate_const(const struct r_list *list, 
 			  bool (*f)(const struct r_link *link));
 
+#define r_list_for(list, scan, field)					\
+for (scan = container_of((list)->ls_head, typeof(*scan), field); \
+     &scan->field != (void *)(list); scan = container_of(scan->field.ln_next, \
+							 typeof(*scan), field))
+
 /* __R_LIST_H__ */
 #endif
 
