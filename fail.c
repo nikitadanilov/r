@@ -14,7 +14,7 @@ void r_panic(const char *fmt,
 	va_list args;
 
 	va_start(args, func);
-	fprintf(stderr, "R panicked ar %s:%s:%i ", file, func, lineno);
+	fprintf(stderr, "R panicked at %s:%s:%i ", file, func, lineno);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fprintf(stderr, "\nAborting.\n");
