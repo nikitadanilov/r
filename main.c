@@ -10,8 +10,8 @@ int main(int argc, char **argv)
 	struct r_rel rel;
 	struct r_ent ent;
 
-	rel.rel_ops = NULL;
-	ent.ent_ops = NULL;
+	rel.r_ops = NULL;
+	ent.e_ops = NULL;
 	return 1;
 }
 

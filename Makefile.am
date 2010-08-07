@@ -1,5 +1,5 @@
 SUBDIRS = .
 
 bin_PROGRAMS = r
-r_SOURCES    = main.c r.h
+r_SOURCES    = r.c r.h main.c hash.h hash.c misc.h mem.c mem.h fail.h fail.c
 
