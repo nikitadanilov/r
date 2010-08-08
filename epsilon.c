@@ -109,6 +109,27 @@ void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 	R_POST(r_ents_are_in(&er->er_rel, a, b));
 }
 
+static void eps_duo_fini(struct eduo *ed)
+{
+	struct r_duo *duo;
+	struct eptr  *left;
+	struct eptr  *right;
+
+	duo = &ed->b_duo;
+	left = get_eptr(duo->d_left);
+	right = get_eptr(duo->d_right);
+
+	R_ASSERT(left->sp_right_nr > 0);
+	left->sp_right_nr--;
+	r_link_del(&ed->b_right_linkage);
+
+	R_ASSERT(right->sp_left_nr > 0);
+	right->sp_left_nr--;
+	r_link_del(&ed->b_left_linkage);
+
+	r_duo_fini(duo);
+}
+
 static int eps_ent_add(struct r_rel *rel, struct r_ent *ent, 
 		       struct r_ptr **out)
 {
@@ -188,6 +209,20 @@ static bool eps_ptr_are_in(struct r_rel *rel,
 
 static void eps_ptr_free(struct r_ptr *ptr)
 {
+	struct eduo  *link;
+	struct eduo  *next;
+	struct eptr  *ep;
+
+	ep = get_eptr(ptr);
+	r_list_for_mod(&ep->sp_right, link, next, b_right_linkage)
+		eps_duo_fini(link);
+	r_list_for_mod(&ep->sp_left, link, next, b_left_linkage)
+		eps_duo_fini(link);
+
+	R_ASSERT(ep->sp_left_nr == 0);
+	R_ASSERT(ep->sp_right_nr == 0);
+	R_ASSERT(r_list_is_empty(&ep->sp_left));
+	R_ASSERT(r_list_is_empty(&ep->sp_right));
 }
 
 struct r_duo *eps_ptr_right(struct r_ptr *ptr, uint32_t nr)
