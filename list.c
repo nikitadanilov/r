@@ -103,6 +103,18 @@ uint32_t r_list_length(const struct r_list *list)
 	return length;
 }
 
+struct r_link *r_list_at(const struct r_list *list, uint32_t nr)
+{
+	struct r_link *scan;
+
+	R_INVARIANT(r_list_invariant(list));
+	for (scan = list->ls_head; scan != (void*)list; scan = scan->ln_next) {
+		if (nr-- == 0)
+			return scan;
+	}
+	return NULL;
+}
+
 bool r_list_is_empty(const struct r_list *list)
 {
 	R_INVARIANT(r_list_invariant(list));

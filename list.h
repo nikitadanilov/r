@@ -36,6 +36,8 @@ void r_link_del(struct r_link *link);
 bool r_list_contains(const struct r_list *list, const struct r_link *link);
 uint32_t r_list_length(const struct r_list *list);
 
+struct r_link *r_list_at(const struct r_list *list, uint32_t nr);
+
 bool r_list_is_empty(const struct r_list *list);
 bool r_link_is_linked(const struct r_link *link);
 
