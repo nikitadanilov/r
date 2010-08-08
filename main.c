@@ -4,8 +4,10 @@
 
 #include <stdlib.h> /* NULL */
 #include <stdio.h> /* printf */
+#include <string.h> /* strcpy */
 
 #include "r.h"
+#include "meta.h"
 #include "fail.h"
 #include "epsilon.h"
 
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
 	r_init();
 
 	r_eps_rel_init(&in);
+	strcpy(r_name(&in.er_rel.r_ent), "-in-");
 
 	A = r_ent_find(&iA);
 	B = r_ent_find(&iB);
@@ -59,12 +62,17 @@ int main(int argc, char **argv)
 	r_ent_add(A, &in.er_rel);
 	r_ent_add(B, &in.er_rel);
 	r_eps_add(&in, A, B);
+	r_eps_add(&in, A, A);
 
 	R_ASSERT(r_ents_are_in(&in.er_rel, A, B));
-	r_eps_rel_fini(&in);
-
 	print(&in.er_rel, A);
 	print(&in.er_rel, B);
+
+	print(&r_meta_rel.er_rel, A);
+	print(&r_meta_rel.er_rel, B);
+	print(&r_meta_rel.er_rel, &in.er_rel.r_ent);
+
+	//r_eps_rel_fini(&in);
 	// r_fini();
 	return 0;
 }
