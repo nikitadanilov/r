@@ -31,7 +31,7 @@ typedef uint64_t r_refcnt_t;
 struct r_ent {
 	r_refcnt_t              e_ref;
 	struct r_hash_link      e_linkage;
-	const char             *e_name;
+	char                   *e_name;
 	const struct r_ent_ops *e_ops;
 	/* list of pointers to this entity */
 	struct r_list           e_ptr;
@@ -115,7 +115,10 @@ struct r_ent *r_ent_find(const struct r_id *id);
 void r_ent_get(struct r_ent *ent);
 void r_ent_put(struct r_ent *ent);
 int  r_ent_add(struct r_ent *ent, struct r_rel *rel);
-const char *r_name(const struct r_ent *ent);
+char *r_name(struct r_ent *ent);
+
+/* macro to avoid const issues */
+#define r_name(ent) ((ent)->e_linkage.hl_id.id_name)
 
 struct r_ptr *r_ptr_find(const struct r_ent *ent, const struct r_rel *rel);
 void r_ptr_add(struct r_ptr *ptr, struct r_ent *ent, struct r_rel *rel);

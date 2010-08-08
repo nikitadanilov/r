@@ -8,6 +8,7 @@
 #include "hash.h"
 #include "fail.h"
 #include "misc.h"
+#include "meta.h"
 #include "mem.h"
 #include "r.h"
 
@@ -69,8 +70,13 @@ int r_ent_add(struct r_ent *ent, struct r_rel *rel)
 
 	if (r_ptr_find(ent, rel) == NULL) {
 		result = rel->r_ops->ro_ent_add(rel, ent, &ptr);
-		if (result == 0)
+		if (result == 0) {
 			r_ptr_add(ptr, ent, rel);
+			/* relate ent and rel by meta-relation. */
+			r_ent_add(ent, &r_meta_rel.er_rel);
+			r_ent_add(&rel->r_ent, &r_meta_rel.er_rel);
+			r_eps_add(&r_meta_rel, ent, &rel->r_ent);
+		}
 	} else
 		/* already in relation */
 		result = 0;
@@ -89,11 +95,6 @@ bool r_ents_are_in(struct r_rel *rel, struct r_ent *a, struct r_ent *b)
 	R_PRE(B != NULL);
 
 	return rel->r_ops->ro_ptr_are_in(rel, A, B);
-}
-
-const char *r_name(const struct r_ent *ent)
-{
-	return ent->e_linkage.hl_id.id_name;
 }
 
 void r_rel_init(struct r_rel *rel)
@@ -159,10 +160,12 @@ void r_duo_fini(struct r_duo *duo)
 void r_init(void)
 {
 	r_hash_init(&ent_hash, 14);
+	r_meta_init();
 }
 
 void r_fini(void)
 {
+	r_meta_fini();
 	r_hash_fini(&ent_hash);
 }
 
