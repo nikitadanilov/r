@@ -66,9 +66,9 @@ static bool r_eps_invariant(const struct r_eps_rel *er,
 	return true;
 }
 
-void r_eps_rel_init(struct r_eps_rel *er)
+void r_eps_rel_init(struct r_eps_rel *er, char *name)
 {
-	r_rel_init(&er->er_rel);
+	r_rel_init(&er->er_rel, name);
 	er->er_rel.r_ops = &eps_rel_ops;
 }
 
@@ -89,13 +89,14 @@ void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 
 	R_PRE(A != NULL);
 	R_PRE(B != NULL);
-	R_PRE(!r_ents_are_in(&er->er_rel, a, b));
+	R_PRE(!r_ents_are_in(r, a, b));
 
 	R_INVARIANT(r_eps_invariant(er, a));
 	R_INVARIANT(r_eps_invariant(er, b));
 
 	link = r_alloc(sizeof *link);
-	r_duo_init(&link->b_duo);
+	r_duo_init(&link->b_duo, r_name_make("%s-%s-%s", r_name(a), 
+					     r_name(&r->r_ent), r_name(b)));
 	link->b_duo.d_left  = &A->sp_ptr;
 	link->b_duo.d_right = &B->sp_ptr;
 	r_list_add(&A->sp_right, &link->b_right_linkage);
@@ -106,7 +107,7 @@ void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 	R_INVARIANT(r_eps_invariant(er, a));
 	R_INVARIANT(r_eps_invariant(er, b));
 
-	R_POST(r_ents_are_in(&er->er_rel, a, b));
+	R_POST(r_ents_are_in(r, a, b));
 }
 
 static void eps_duo_fini(struct eduo *ed)
@@ -136,7 +137,8 @@ static int eps_ent_add(struct r_rel *rel, struct r_ent *ent,
 	struct eptr *ep;
 
 	ep = r_alloc(sizeof *ep);
-	r_ptr_init(&ep->sp_ptr);
+	r_ptr_init(&ep->sp_ptr, r_name_make("%s:%s", 
+					    r_name(ent), r_name(&rel->r_ent)));
 	r_list_init(&ep->sp_left);
 	r_list_init(&ep->sp_right);
 	ep->sp_ptr.p_ops = &eps_ptr_ops;

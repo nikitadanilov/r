@@ -14,18 +14,20 @@
 
 static struct r_hash_table ent_hash;
 
-void r_ent_init(struct r_ent *ent)
+void r_ent_init(struct r_ent *ent, char *name)
 {
 	memset(ent, 0, sizeof *ent);
 	r_list_init(&ent->e_ptr);
+	ent->e_name = name;
 }
 
 void r_ent_fini(struct r_ent *ent)
 {
+	r_free(ent->e_name);
 	r_list_fini(&ent->e_ptr);
 }
 
-struct r_ent *r_ent_find(const struct r_id *id)
+struct r_ent *r_ent_find(const struct r_id *id, char *name)
 {
 	struct r_ent       *ent;
 	struct r_hash_link *link;
@@ -33,7 +35,7 @@ struct r_ent *r_ent_find(const struct r_id *id)
 	link = r_hash_lookup(&ent_hash, id);
 	if (link == NULL) {
 		ent = r_alloc(sizeof *ent);
-		r_ent_init(ent);
+		r_ent_init(ent, name);
 		link = &ent->e_linkage;
 		link->hl_id = *id;
 		r_hash_add(&ent_hash, link);
@@ -97,10 +99,15 @@ bool r_ents_are_in(struct r_rel *rel, struct r_ent *a, struct r_ent *b)
 	return rel->r_ops->ro_ptr_are_in(rel, A, B);
 }
 
-void r_rel_init(struct r_rel *rel)
+const char *r_name(const struct r_ent *ent)
+{
+	return ent->e_name;
+}
+
+void r_rel_init(struct r_rel *rel, char *name)
 {
 	memset(rel, 0, sizeof *rel);
-	r_ent_init(&rel->r_ent);
+	r_ent_init(&rel->r_ent, name);
 }
 
 void r_rel_fini(struct r_rel *rel)
@@ -108,10 +115,10 @@ void r_rel_fini(struct r_rel *rel)
 	r_ent_fini(&rel->r_ent);
 }
 
-void r_ptr_init(struct r_ptr *ptr)
+void r_ptr_init(struct r_ptr *ptr, char *name)
 {
 	memset(ptr, 0, sizeof *ptr);
-	r_ent_init(&ptr->p_self);
+	r_ent_init(&ptr->p_self, name);
 	r_link_init(&ptr->p_linkage);
 }
 
@@ -147,9 +154,9 @@ void r_ptr_del(struct r_ptr *ptr)
 	r_ent_put(&ptr->p_rel->r_ent);
 }
 
-void r_duo_init(struct r_duo *duo)
+void r_duo_init(struct r_duo *duo, char *name)
 {
-	r_ent_init(&duo->d_ent);
+	r_ent_init(&duo->d_ent, name);
 }
 
 void r_duo_fini(struct r_duo *duo)

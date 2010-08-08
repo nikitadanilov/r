@@ -5,7 +5,7 @@
 #ifndef __R_MISC_H__
 #define __R_MISC_H__
 
-#include <stddef.h>
+#include <stddef.h> /* NULL */
 
 #define ergo(a, b) (!(a) || (b))
 #define sizeof_array(a) (sizeof(a)/sizeof((a)[0]))
@@ -15,6 +15,9 @@
 	((ptr) != 0 ? container_of(ptr, type, field) : (type *)0)
 
 #define LAMBDA(t, ...) ({ t lambda __VA_ARGS__ ; &lambda; })
+
+char *r_name_make(const char *fmt, ...)
+	__attribute__((format(printf, 1, 2)));
 
 /* __R_MISC_H__ */
 #endif

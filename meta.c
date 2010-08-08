@@ -9,7 +9,7 @@ struct r_eps_rel r_meta_rel;
 
 void r_meta_init(void)
 {
-	r_eps_rel_init(&r_meta_rel);
+	r_eps_rel_init(&r_meta_rel, "-meta-");
 }
 
 void r_meta_fini(void)
