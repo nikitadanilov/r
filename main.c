@@ -3,10 +3,40 @@
    copyright and licensing information. */
 
 #include <stdlib.h> /* NULL */
+#include <stdio.h> /* printf */
 
 #include "r.h"
 #include "fail.h"
 #include "epsilon.h"
+
+static void print(const struct r_rel *rel, const struct r_ent *ent)
+{
+	struct r_duo *duo;
+	struct r_ptr *ptr;
+	uint32_t i;
+
+	ptr = r_ptr_find(ent, rel);
+	R_PRE(ptr != NULL);
+	printf("%s = { ", r_name(ent));
+	for (i = 0; ; i++) {
+		duo = ptr->p_ops->po_right(ptr, i);
+		if (duo != NULL) {
+			R_ASSERT(duo->d_left == ptr);
+			printf("\"%s\" ", r_name(duo->d_right->p_ent));
+		} else
+			break;
+	}
+	printf(" } : } ");
+	for (i = 0; ; i++) {
+		duo = ptr->p_ops->po_left(ptr, i);
+		if (duo != NULL) {
+			R_ASSERT(duo->d_right == ptr);
+			printf("\"%s\" ", r_name(duo->d_left->p_ent));
+		} else
+			break;
+	}
+	printf("{\n");
+}
 
 int main(int argc, char **argv)
 {
@@ -33,8 +63,10 @@ int main(int argc, char **argv)
 	R_ASSERT(r_ents_are_in(&in.er_rel, A, B));
 	r_eps_rel_fini(&in);
 
+	print(&in.er_rel, A);
+	print(&in.er_rel, B);
 	// r_fini();
-	return 1;
+	return 0;
 }
 
 /* 
