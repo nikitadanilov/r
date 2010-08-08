@@ -14,6 +14,7 @@
 struct r_ent;
 struct r_rel;
 struct r_ptr;
+struct r_duo;
 
 struct r_ent_ops;
 struct r_rel_ops;
@@ -72,6 +73,20 @@ struct r_ptr {
 void r_ptr_init(struct r_ptr *ptr);
 void r_ptr_fini(struct r_ptr *ptr);
 
+/** A pair of entities related by a relation. 
+
+    A relation is notionally a set of entity pairs.
+ */
+struct r_duo {
+	/* A duo is an entity itself. */
+	struct r_ent  d_ent;
+	struct r_ptr *d_left;
+	struct r_ptr *d_right;
+};
+
+void r_duo_init(struct r_duo *duo);
+void r_duo_fini(struct r_duo *duo);
+
 struct r_ent_ops {
 	void     (*eo_free)(struct r_ent *ent);
 };
@@ -88,7 +103,8 @@ struct r_rel_ops {
 };
 
 struct r_ptr_ops {
-	unsigned (*po_U)(struct r_ptr *ptr, uint32_t nr, struct r_ptr **out);
+	struct r_duo *(*po_right)(struct r_ptr *ptr, uint32_t nr);
+	struct r_duo *(*po_left)(struct r_ptr *ptr, uint32_t nr);
 	void (*po_free)(struct r_ptr *ptr);
 };
 
@@ -99,6 +115,8 @@ struct r_ent *r_ent_find(const struct r_id *id);
 void r_ent_get(struct r_ent *ent);
 void r_ent_put(struct r_ent *ent);
 int  r_ent_add(struct r_ent *ent, struct r_rel *rel);
+const char *r_name(const struct r_ent *ent);
+
 struct r_ptr *r_ptr_find(const struct r_ent *ent, const struct r_rel *rel);
 void r_ptr_add(struct r_ptr *ptr, struct r_ent *ent, struct r_rel *rel);
 void r_ptr_del(struct r_ptr *ptr);

@@ -91,6 +91,11 @@ bool r_ents_are_in(struct r_rel *rel, struct r_ent *a, struct r_ent *b)
 	return rel->r_ops->ro_ptr_are_in(rel, A, B);
 }
 
+const char *r_name(const struct r_ent *ent)
+{
+	return ent->e_linkage.hl_id.id_name;
+}
+
 void r_rel_init(struct r_rel *rel)
 {
 	memset(rel, 0, sizeof *rel);
@@ -139,6 +144,16 @@ void r_ptr_del(struct r_ptr *ptr)
 	ptr->p_ops->po_free(ptr);
 	r_link_del(&ptr->p_linkage);
 	r_ent_put(&ptr->p_rel->r_ent);
+}
+
+void r_duo_init(struct r_duo *duo)
+{
+	r_ent_init(&duo->d_ent);
+}
+
+void r_duo_fini(struct r_duo *duo)
+{
+	r_ent_fini(&duo->d_ent);
 }
 
 void r_init(void)
