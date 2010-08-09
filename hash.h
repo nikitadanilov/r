@@ -37,8 +37,7 @@ void r_hash_fini(struct r_hash_table *ht);
 /**
    @post ergo(result != NULL, r_id_eq(&result->hl_id, id))
  */
-struct r_hash_link *r_hash_lookup(struct r_hash_table *ht, 
-				  const struct r_id *id);
+struct r_hash_link *r_hash_lookup(struct r_hash_table *ht, const char *id);
 
 /**
 	@pre r_hash_lookup(ht, &link->hl_id) == NULL
@@ -51,6 +50,8 @@ void r_hash_add(struct r_hash_table *ht, struct r_hash_link *link);
 	@post r_hash_lookup(ht, &link->hl_id) == NULL
  */
 void r_hash_del(struct r_hash_table *ht, struct r_hash_link *link);
+
+void r_hash_stats(const struct r_hash_table *ht);
 
 /* __R_HASH_H__ */
 #endif
