@@ -3,7 +3,9 @@
    copyright and licensing information. */
 
 #include <stdlib.h> /* NULL */
-#include <string.h> /* memset */
+#include <string.h> /* memset, strcpy */
+
+//#include <stdio.h>  /* XXX printf */
 
 #include "hash.h"
 #include "fail.h"
@@ -13,21 +15,31 @@
 #include "r.h"
 
 static struct r_hash_table ent_hash;
+static struct r_list ent_list;
 
-void r_ent_init(struct r_ent *ent, char *name)
+void r_ent_init(struct r_ent *ent, const char *id, char *name)
 {
+	R_PRE(strlen(id) < sizeof_array(ent->e_linkage.hl_id.id_name));
+
+	//printf("%s: (%s, %s) -> %p\n", __func__, id, name, ent);
+
 	memset(ent, 0, sizeof *ent);
 	r_list_init(&ent->e_ptr);
 	ent->e_name = name;
+	strcpy(ent->e_linkage.hl_id.id_name, id);
+	r_hash_add(&ent_hash, &ent->e_linkage);
+	r_list_add(&ent_list, &ent->e_ent_list);
 }
 
 void r_ent_fini(struct r_ent *ent)
 {
+	r_hash_del(&ent_hash, &ent->e_linkage);
 	r_free(ent->e_name);
 	r_list_fini(&ent->e_ptr);
+	r_link_del(&ent->e_ent_list);
 }
 
-struct r_ent *r_ent_find(const struct r_id *id, char *name)
+struct r_ent *r_ent_find(const char *id, char *name)
 {
 	struct r_ent       *ent;
 	struct r_hash_link *link;
@@ -35,10 +47,7 @@ struct r_ent *r_ent_find(const struct r_id *id, char *name)
 	link = r_hash_lookup(&ent_hash, id);
 	if (link == NULL) {
 		ent = r_alloc(sizeof *ent);
-		r_ent_init(ent, name);
-		link = &ent->e_linkage;
-		link->hl_id = *id;
-		r_hash_add(&ent_hash, link);
+		r_ent_init(ent, id, name);
 	} else
 		ent = container_of(link, struct r_ent, e_linkage);
 	r_ent_get(ent);
@@ -111,10 +120,10 @@ void r_name_set(struct r_ent *ent, char *name)
 	ent->e_name = name;
 }
 
-void r_rel_init(struct r_rel *rel, char *name)
+void r_rel_init(struct r_rel *rel, const char *id, char *name)
 {
 	memset(rel, 0, sizeof *rel);
-	r_ent_init(&rel->r_ent, name);
+	r_ent_init(&rel->r_ent, id, name);
 }
 
 void r_rel_fini(struct r_rel *rel)
@@ -122,10 +131,10 @@ void r_rel_fini(struct r_rel *rel)
 	r_ent_fini(&rel->r_ent);
 }
 
-void r_ptr_init(struct r_ptr *ptr, char *name)
+void r_ptr_init(struct r_ptr *ptr, const char *id, char *name)
 {
 	memset(ptr, 0, sizeof *ptr);
-	r_ent_init(&ptr->p_self, name);
+	r_ent_init(&ptr->p_self, id, name);
 	r_link_init(&ptr->p_linkage);
 }
 
@@ -161,9 +170,9 @@ void r_ptr_del(struct r_ptr *ptr)
 	r_ent_put(&ptr->p_rel->r_ent);
 }
 
-void r_duo_init(struct r_duo *duo, char *name)
+void r_duo_init(struct r_duo *duo, const char *id, char *name)
 {
-	r_ent_init(&duo->d_ent, name);
+	r_ent_init(&duo->d_ent, id, name);
 }
 
 void r_duo_fini(struct r_duo *duo)
@@ -173,14 +182,17 @@ void r_duo_fini(struct r_duo *duo)
 
 void r_init(void)
 {
+	r_list_init(&ent_list);
 	r_hash_init(&ent_hash, 14);
 	r_meta_init();
 }
 
 void r_fini(void)
 {
+	r_hash_stats(&ent_hash);
 	r_meta_fini();
 	r_hash_fini(&ent_hash);
+	r_list_fini(&ent_list);
 }
 
 /* 

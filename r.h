@@ -35,9 +35,11 @@ struct r_ent {
 	const struct r_ent_ops *e_ops;
 	/* list of pointers to this entity */
 	struct r_list           e_ptr;
+	/* linkage in the list of all entities */
+	struct r_link           e_ent_list;
 };
 
-void r_ent_init(struct r_ent *ent, char *name);
+void r_ent_init(struct r_ent *ent, const char *id, char *name);
 void r_ent_fini(struct r_ent *ent);
 
 /** A relation between entities.
@@ -50,7 +52,7 @@ struct r_rel {
 	const struct r_rel_ops *r_ops;
 };
 
-void r_rel_init(struct r_rel *rel, char *name);
+void r_rel_init(struct r_rel *rel, const char *id, char *name);
 void r_rel_fini(struct r_rel *rel);
 
 /** A relation-entity pointer.
@@ -70,7 +72,7 @@ struct r_ptr {
 	const struct r_ptr_ops *p_ops;
 };
 
-void r_ptr_init(struct r_ptr *ptr, char *name);
+void r_ptr_init(struct r_ptr *ptr, const char *id, char *name);
 void r_ptr_fini(struct r_ptr *ptr);
 
 /** A pair of entities related by a relation. 
@@ -84,7 +86,7 @@ struct r_duo {
 	struct r_ptr *d_right;
 };
 
-void r_duo_init(struct r_duo *duo, char *name);
+void r_duo_init(struct r_duo *duo, const char *id, char *name);
 void r_duo_fini(struct r_duo *duo);
 
 struct r_ent_ops {
@@ -111,7 +113,7 @@ struct r_ptr_ops {
 /**
    @pre size >= sizeof(struct r_ent)
  */
-struct r_ent *r_ent_find(const struct r_id *id, char *name);
+struct r_ent *r_ent_find(const char *id, char *name);
 void r_ent_get(struct r_ent *ent);
 void r_ent_put(struct r_ent *ent);
 int  r_ent_add(struct r_ent *ent, struct r_rel *rel);
