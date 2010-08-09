@@ -54,15 +54,14 @@ int main(int argc, char **argv)
 	struct r_eps_rel in;
 	struct r_ent *A;
 	struct r_ent *B;
-	const struct r_id iA = { .id_name = "haha" };
-	const struct r_id iB = { .id_name = "hehe" };
+	int result;
 
 	r_init();
 
-	r_eps_rel_init(&in, r_name_make("-in-"));
+	r_eps_rel_init(&in, "IN", r_name_make("-in-"));
 
-	A = r_ent_find(&iA, r_name_make("A"));
-	B = r_ent_find(&iB, r_name_make("B"));
+	A = r_ent_find("haha", r_name_make("A"));
+	B = r_ent_find("hehe", r_name_make("B"));
 	R_ASSERT(A != NULL);
 	R_ASSERT(B != NULL);
 	R_ASSERT(A != B);
@@ -79,7 +78,8 @@ int main(int argc, char **argv)
 	print(&in.er_rel.r_ent);
 	print(&r_meta_rel.er_rel.r_ent);
 
-	file_rel_build(argv[1], &in);
+	result = file_rel_build(argv[1], &in);
+	R_ASSERT(result == 0);
 
 	r_eps_ptr_iter(&in, LAMBDA(bool, (const struct r_ptr *ptr) {
 				printf("%s\n", r_name(&ptr->p_self));
