@@ -2,6 +2,8 @@
 /* This file is part of R. See the end of the file for the prominent
    copyright and licensing information. */
 
+#include <stddef.h> /* NULL */
+
 #include "fail.h"
 #include "misc.h"
 #include "list.h"
