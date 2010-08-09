@@ -4,12 +4,12 @@
 
 #include <stdlib.h> /* NULL */
 #include <stdio.h> /* printf */
-#include <string.h> /* strcpy */
 
 #include "r.h"
 #include "meta.h"
 #include "misc.h"
 #include "fail.h"
+#include "file.h"
 #include "epsilon.h"
 
 static void print_in(const struct r_rel *rel, const struct r_ent *ent)
@@ -79,7 +79,21 @@ int main(int argc, char **argv)
 	print(&in.er_rel.r_ent);
 	print(&r_meta_rel.er_rel.r_ent);
 
-	//r_eps_rel_fini(&in);
+	file_rel_build(argv[1], &in);
+
+	r_eps_ptr_iter(&in, LAMBDA(bool, (const struct r_ptr *ptr) {
+				printf("%s\n", r_name(&ptr->p_self));
+				return false;
+			}));
+	r_eps_duo_iter(&in, LAMBDA(bool, (const struct r_duo *duo) {
+				printf("%s-[%s]->%s\n", 
+				       r_name(duo->d_left->p_ent),
+				       r_name(&duo->d_ent), 
+				       r_name(duo->d_right->p_ent));
+				return false;
+			}));
+
+	// r_eps_rel_fini(&in);
 	// r_fini();
 	return 0;
 }

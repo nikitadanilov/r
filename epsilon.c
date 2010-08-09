@@ -2,6 +2,8 @@
 /* This file is part of R. See the end of the file for the prominent
    copyright and licensing information. */
 
+#include <stddef.h> /* NULL */
+
 #include "epsilon.h"
 #include "fail.h"
 #include "misc.h"
@@ -17,12 +19,14 @@ struct eptr {
 	    relation. */
 	struct r_list sp_right;
 	uint32_t      sp_right_nr;
+	struct r_link sp_rel_linkage;
 };
 
 struct eduo {
 	struct r_duo   b_duo;
 	struct r_link  b_left_linkage;
 	struct r_link  b_right_linkage;
+	struct r_link  b_rel_linkage;
 };
 
 static const struct r_rel_ops eps_rel_ops;
@@ -70,14 +74,18 @@ void r_eps_rel_init(struct r_eps_rel *er, char *name)
 {
 	r_rel_init(&er->er_rel, name);
 	er->er_rel.r_ops = &eps_rel_ops;
+	r_list_init(&er->er_ptr);
+	r_list_init(&er->er_duo);
 }
 
 void r_eps_rel_fini(struct r_eps_rel *er)
 {
+	r_list_fini(&er->er_duo);
+	r_list_fini(&er->er_ptr);
 	r_rel_fini(&er->er_rel);
 }
 
-void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
+struct r_duo *r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 {
 	struct eptr  *A;
 	struct eptr  *B;
@@ -89,7 +97,6 @@ void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 
 	R_PRE(A != NULL);
 	R_PRE(B != NULL);
-	R_PRE(!r_ents_are_in(r, a, b));
 
 	R_INVARIANT(r_eps_invariant(er, a));
 	R_INVARIANT(r_eps_invariant(er, b));
@@ -103,11 +110,12 @@ void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 	r_list_add(&B->sp_left, &link->b_left_linkage);
 	A->sp_right_nr++;
 	B->sp_left_nr++;
-
+	r_list_add(&er->er_duo, &link->b_rel_linkage);
 	R_INVARIANT(r_eps_invariant(er, a));
 	R_INVARIANT(r_eps_invariant(er, b));
 
 	R_POST(r_ents_are_in(r, a, b));
+	return &link->b_duo;
 }
 
 static void eps_duo_fini(struct eduo *ed)
@@ -128,13 +136,15 @@ static void eps_duo_fini(struct eduo *ed)
 	right->sp_left_nr--;
 	r_link_del(&ed->b_left_linkage);
 
+	r_link_del(&ed->b_rel_linkage);
 	r_duo_fini(duo);
 }
 
 static int eps_ent_add(struct r_rel *rel, struct r_ent *ent, 
 		       struct r_ptr **out)
 {
-	struct eptr *ep;
+	struct eptr      *ep;
+	struct r_eps_rel *er;
 
 	ep = r_alloc(sizeof *ep);
 	r_ptr_init(&ep->sp_ptr, r_name_make("%s:%s", 
@@ -142,8 +152,34 @@ static int eps_ent_add(struct r_rel *rel, struct r_ent *ent,
 	r_list_init(&ep->sp_left);
 	r_list_init(&ep->sp_right);
 	ep->sp_ptr.p_ops = &eps_ptr_ops;
+	er = outer(rel, struct r_eps_rel, er_rel);
+	r_list_add(&er->er_ptr, &ep->sp_rel_linkage);
 	*out = &ep->sp_ptr;
 	return 0;
+}
+
+void r_eps_ptr_iter(const struct r_eps_rel *er, 
+		    bool (*f)(const struct r_ptr *))
+{
+	r_list_iterate_const
+		(&er->er_ptr, LAMBDA(bool, (const struct r_link *link) {
+				struct eptr *ep;
+
+				ep = outer(link, struct eptr, sp_rel_linkage);
+				return f(&ep->sp_ptr);
+			} ));
+}
+
+void r_eps_duo_iter(const struct r_eps_rel *er, 
+		    bool (*f)(const struct r_duo *))
+{
+	r_list_iterate_const
+		(&er->er_duo, LAMBDA(bool, (const struct r_link *link) {
+				struct eduo *ed;
+
+				ed = outer(link, struct eduo, b_rel_linkage);
+				return f(&ed->b_duo);
+			} ));
 }
 
 static bool eps_right_related(const struct eptr *ptr, const struct r_ent *ent)
@@ -220,6 +256,8 @@ static void eps_ptr_free(struct r_ptr *ptr)
 		eps_duo_fini(link);
 	r_list_for_mod(&ep->sp_left, link, next, b_left_linkage)
 		eps_duo_fini(link);
+
+	r_link_del(&ep->sp_rel_linkage);
 
 	R_ASSERT(ep->sp_left_nr == 0);
 	R_ASSERT(ep->sp_right_nr == 0);

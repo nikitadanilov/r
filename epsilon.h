@@ -6,15 +6,24 @@
 #define __R_EPSILON_H__
 
 #include "r.h"
+#include "list.h"
 
 struct r_eps_rel {
-	struct r_rel er_rel;
+	struct r_rel  er_rel;
+	struct r_list er_ptr;
+	struct r_list er_duo;
 };
 
 void r_eps_rel_init(struct r_eps_rel *er, char *name);
 void r_eps_rel_fini(struct r_eps_rel *er);
 
-void r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b);
+struct r_duo *r_eps_add(struct r_eps_rel *er, 
+			struct r_ent *a, struct r_ent *b);
+
+void r_eps_ptr_iter(const struct r_eps_rel *er, 
+		    bool (*f)(const struct r_ptr *));
+void r_eps_duo_iter(const struct r_eps_rel *er, 
+		    bool (*f)(const struct r_duo *));
 
 /* __R_EPSILON_H__ */
 #endif
