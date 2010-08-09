@@ -5,8 +5,6 @@
 #ifndef __R_MISC_H__
 #define __R_MISC_H__
 
-#include <stddef.h> /* NULL */
-
 #define ergo(a, b) (!(a) || (b))
 #define sizeof_array(a) (sizeof(a)/sizeof((a)[0]))
 #define container_of(ptr, type, field) \
