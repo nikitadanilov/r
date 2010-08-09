@@ -45,8 +45,8 @@ static struct eptr *get_repr(const struct r_ent *ent, const struct r_rel *rel)
 	return get_eptr(r_ptr_find(ent, rel));
 }
 
-static bool r_eps_invariant(const struct r_eps_rel *er, 
-			    const struct r_ent *ent)
+static __attribute__((unused)) bool r_eps_invariant(const struct r_eps_rel *er,
+						    const struct r_ent *ent)
 {
 	struct eptr  *ep;
 	struct eduo  *link;
@@ -70,9 +70,9 @@ static bool r_eps_invariant(const struct r_eps_rel *er,
 	return true;
 }
 
-void r_eps_rel_init(struct r_eps_rel *er, char *name)
+void r_eps_rel_init(struct r_eps_rel *er, const char *id, char *name)
 {
-	r_rel_init(&er->er_rel, name);
+	r_rel_init(&er->er_rel, id, name);
 	er->er_rel.r_ops = &eps_rel_ops;
 	r_list_init(&er->er_ptr);
 	r_list_init(&er->er_duo);
@@ -91,6 +91,7 @@ struct r_duo *r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 	struct eptr  *B;
 	struct eduo  *link;
 	struct r_rel *r = &er->er_rel;
+	char         *id;
 
 	A = get_repr(a, r);
 	B = get_repr(b, r);
@@ -102,8 +103,15 @@ struct r_duo *r_eps_add(struct r_eps_rel *er, struct r_ent *a, struct r_ent *b)
 	R_INVARIANT(r_eps_invariant(er, b));
 
 	link = r_alloc(sizeof *link);
-	r_duo_init(&link->b_duo, r_name_make("%s-%s-%s", r_name(a), 
-					     r_name(&r->r_ent), r_name(b)));
+	
+	id = r_name_make("(%s)-[%s]-(%s)@%p",
+			 a->e_linkage.hl_id.id_name,
+			 r->r_ent.e_linkage.hl_id.id_name,
+			 b->e_linkage.hl_id.id_name, &link->b_duo);
+	r_duo_init(&link->b_duo, id, r_name_make("%s-%s-%s", r_name(a), 
+						 r_name(&r->r_ent), 
+						 r_name(b)));
+	r_free(id);
 	link->b_duo.d_left  = &A->sp_ptr;
 	link->b_duo.d_right = &B->sp_ptr;
 	r_list_add(&A->sp_right, &link->b_right_linkage);
@@ -145,10 +153,15 @@ static int eps_ent_add(struct r_rel *rel, struct r_ent *ent,
 {
 	struct eptr      *ep;
 	struct r_eps_rel *er;
+	char             *id;
 
 	ep = r_alloc(sizeof *ep);
-	r_ptr_init(&ep->sp_ptr, r_name_make("%s:%s", 
-					    r_name(ent), r_name(&rel->r_ent)));
+	id = r_name_make("(%s):(%s)@%p",
+			 ent->e_linkage.hl_id.id_name,
+			 rel->r_ent.e_linkage.hl_id.id_name, &ep->sp_ptr);
+	r_ptr_init(&ep->sp_ptr, id, r_name_make("%s:%s", r_name(ent), 
+						r_name(&rel->r_ent)));
+	r_free(id);
 	r_list_init(&ep->sp_left);
 	r_list_init(&ep->sp_right);
 	ep->sp_ptr.p_ops = &eps_ptr_ops;
