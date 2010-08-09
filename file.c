@@ -3,8 +3,9 @@
    copyright and licensing information. */
 
 #include <fts.h>
-#include <stdio.h>  /* sprintf */
+#include <stdio.h>  /* sprintf, fprintf */
 #include <errno.h>  /* errno */
+#include <string.h> /* strerror */
 #include <stddef.h> /* NULL */
 #include <sys/stat.h>   /* struct stat */
 
@@ -12,15 +13,22 @@
 #include "misc.h" /* r_name_make */
 #include "epsilon.h"
 
+static char *ftsent_name(const FTSENT *el)
+{
+	return r_name_make("%06lx:%06lu",
+			   (long unsigned)el->fts_statp->st_dev,
+			   (long unsigned)el->fts_statp->st_ino);
+
+}
+
 int file_rel_build(char *path, struct r_eps_rel *rel)
 {
 	FTS          *iter;
 	FTSENT       *el;
-	FTSENT       *pel;
 	int           result;
 	char         *argv[] = { [0] = path, [1] = NULL };
-	struct r_id   id;
-	struct r_id   pid;
+	char         *id;
+	char         *pid;
 	struct r_ent *ent;
 	struct r_ent *pent;
 	struct r_rel *r;	
@@ -47,21 +55,24 @@ int file_rel_build(char *path, struct r_eps_rel *rel)
 			result = -ELOOP;
 			break;
 		}
-		if (result != 0)
-			break;
-		sprintf(id.id_name, "%06lu", 
-			(long unsigned)el->fts_statp->st_ino);
-		ent = r_ent_find(&id, r_name_make("%s", id.id_name));
+		if (result != 0) {
+			if (result == -ELOOP) {
+				result = fts_set(iter, el, FTS_SKIP);
+				R_ASSERT(result == 0);
+			} else
+				fprintf(stderr, "%s: \"%s\"\n", 
+					strerror(-result), el->fts_path);
+			continue;
+		}
+		id = ftsent_name(el);
+		ent = r_ent_find(id, id);
 		R_ASSERT(ent != NULL);
 		r_ent_add(ent, r);
 		if (el->fts_level > 0) {
 			struct r_duo *duo;
 
-			pel = el->fts_parent;
-			sprintf(pid.id_name, "%06lu", 
-				(long unsigned)pel->fts_statp->st_ino);
-			pent = r_ent_find(&pid, 
-					  r_name_make("%s", pid.id_name));
+			pid = ftsent_name(el->fts_parent);
+			pent = r_ent_find(pid, pid);
 			R_ASSERT(pent != NULL);
 			r_ent_add(pent, r);
 			duo = r_eps_add(rel, ent, pent);
@@ -71,6 +82,7 @@ int file_rel_build(char *path, struct r_eps_rel *rel)
 	}
 	fts_close(iter);
 	result = result ? : -errno;
+	fprintf(stderr, "%s: %i\n", __func__, result);
 	return result;
 }
 
