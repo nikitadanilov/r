@@ -104,6 +104,13 @@ const char *r_name(const struct r_ent *ent)
 	return ent->e_name;
 }
 
+void r_name_set(struct r_ent *ent, char *name)
+{
+	if (ent->e_name != NULL)
+		r_free(ent->e_name);
+	ent->e_name = name;
+}
+
 void r_rel_init(struct r_rel *rel, char *name)
 {
 	memset(rel, 0, sizeof *rel);

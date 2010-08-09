@@ -116,6 +116,7 @@ void r_ent_get(struct r_ent *ent);
 void r_ent_put(struct r_ent *ent);
 int  r_ent_add(struct r_ent *ent, struct r_rel *rel);
 const char *r_name(const struct r_ent *ent);
+void r_name_set(struct r_ent *ent, char *name);
 
 struct r_ptr *r_ptr_find(const struct r_ent *ent, const struct r_rel *rel);
 void r_ptr_add(struct r_ptr *ptr, struct r_ent *ent, struct r_rel *rel);
